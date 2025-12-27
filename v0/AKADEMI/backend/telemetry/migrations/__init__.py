@@ -1,0 +1,2 @@
+"""Telemetry migrations."""
+
