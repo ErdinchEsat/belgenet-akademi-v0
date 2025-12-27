@@ -1,0 +1,6 @@
+[submodule "v0/AKADEMI/frontend"]
+	path = v0/AKADEMI/frontend
+	url = git@github.com:asringlobal/akademi.v1.git
+[submodule "v0/MAYSCON/mayscon.v1"]
+	path = v0/MAYSCON/mayscon.v1
+	url = git@github.com:asringlobal/mayscon.v1.git
