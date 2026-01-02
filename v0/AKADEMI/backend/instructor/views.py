@@ -58,28 +58,39 @@ class InstructorDashboardView(APIView):
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         today_end = today_start + timedelta(days=1)
 
-        # Eğitmenin sınıfları
-        my_classes = ClassGroup.objects.filter(
+        # Eğitmenin sınıfları - ID'leri al (subquery optimizasyonu için)
+        my_classes_ids = ClassGroup.objects.filter(
             instructors=user,
             status=ClassGroup.Status.ACTIVE
+        ).values_list('id', flat=True)
+        
+        # Eğitmenin sınıfları - detaylı (schedule için)
+        my_classes = ClassGroup.objects.filter(
+            id__in=my_classes_ids
+        ).select_related(
+            'course',
+        ).prefetch_related(
+            'class_enrollments',
         )
         
-        # Toplam öğrenci sayısı (benzersiz)
+        # Toplam öğrenci sayısı (benzersiz) - optimize edilmiş
         total_students = ClassEnrollment.objects.filter(
-            class_group__in=my_classes,
+            class_group_id__in=my_classes_ids,
             status=ClassEnrollment.Status.ACTIVE
         ).values('user').distinct().count()
 
-        # Bugünkü canlı dersler
+        # Bugünkü canlı dersler - select_related ile
         todays_live_sessions = LiveSession.objects.filter(
             instructor=user,
             scheduled_at__gte=today_start,
             scheduled_at__lt=today_end
+        ).select_related(
+            'class_group',
         ).order_by('scheduled_at')
 
-        # Bekleyen ödevler (değerlendirilmemiş)
+        # Bekleyen ödevler (değerlendirilmemiş) - optimize edilmiş
         pending_submissions = AssignmentSubmission.objects.filter(
-            assignment__class_group__in=my_classes,
+            assignment__class_group_id__in=my_classes_ids,
             status=AssignmentSubmission.Status.SUBMITTED
         ).count()
 
@@ -97,13 +108,14 @@ class InstructorDashboardView(APIView):
                 'studentCount': session.class_group.student_count,
             })
 
-        # Bugün teslim tarihi olan ödevler
+        # Bugün teslim tarihi olan ödevler - select_related ile
         todays_assignments = Assignment.objects.filter(
-            class_group__in=my_classes,
+            class_group_id__in=my_classes_ids,
             due_date__gte=today_start,
             due_date__lt=today_end,
             status=Assignment.Status.PUBLISHED
-        )
+        ).select_related('class_group')
+        
         for assignment in todays_assignments[:3]:
             today_schedule.append({
                 'id': str(assignment.id),
@@ -116,11 +128,15 @@ class InstructorDashboardView(APIView):
         # Son aktiviteler
         recent_activities = []
         
-        # Son ödev teslimleri
+        # Son ödev teslimleri - select_related ile assignment.class_group da ekle
         recent_submissions = AssignmentSubmission.objects.filter(
-            assignment__class_group__in=my_classes,
+            assignment__class_group_id__in=my_classes_ids,
             submitted_at__isnull=False
-        ).select_related('student', 'assignment').order_by('-submitted_at')[:5]
+        ).select_related(
+            'student', 
+            'assignment',
+            'assignment__class_group',
+        ).order_by('-submitted_at')[:5]
         
         for submission in recent_submissions:
             time_diff = now - submission.submitted_at
@@ -196,30 +212,59 @@ class InstructorClassViewSet(viewsets.ViewSet):
         user = request.user
         status_filter = request.query_params.get('status', 'active')
         
+        # Annotate ile tek sorguda student_count ve avg_progress hesapla
+        from django.db.models import Count, Avg, Q, Subquery, OuterRef
+        from django.db.models.functions import Coalesce
+        
+        # Sonraki canlı ders subquery
+        next_session_subquery = LiveSession.objects.filter(
+            class_group=OuterRef('pk'),
+            scheduled_at__gte=timezone.now(),
+            status=LiveSession.Status.SCHEDULED
+        ).order_by('scheduled_at').values('id')[:1]
+        
         classes = ClassGroup.objects.filter(
             instructors=user
-        ).select_related('course', 'tenant').prefetch_related('class_enrollments')
+        ).select_related(
+            'course', 
+            'course__tenant',
+            'tenant',
+        ).prefetch_related(
+            'class_enrollments__user',
+            'live_sessions',
+        ).annotate(
+            active_student_count=Count(
+                'class_enrollments',
+                filter=Q(class_enrollments__status=ClassEnrollment.Status.ACTIVE),
+                distinct=True
+            ),
+            next_session_id=Subquery(next_session_subquery),
+        )
         
         if status_filter == 'active':
             classes = classes.filter(status=ClassGroup.Status.ACTIVE)
         elif status_filter == 'completed':
             classes = classes.filter(status=ClassGroup.Status.COMPLETED)
 
+        # Next session bilgilerini bir seferde çek
+        next_session_ids = [c.next_session_id for c in classes if c.next_session_id]
+        next_sessions_map = {}
+        if next_session_ids:
+            next_sessions = LiveSession.objects.filter(id__in=next_session_ids)
+            next_sessions_map = {s.id: s for s in next_sessions}
+
         result = []
         for cls in classes:
-            # Sonraki canlı ders
-            next_session = LiveSession.objects.filter(
-                class_group=cls,
-                scheduled_at__gte=timezone.now(),
-                status=LiveSession.Status.SCHEDULED
-            ).order_by('scheduled_at').first()
-
-            # Ortalama ilerleme
-            avg_progress = Enrollment.objects.filter(
-                course=cls.course,
-                user__in=cls.students.all(),
-                status=Enrollment.Status.ACTIVE
-            ).aggregate(avg=Avg('progress_percent'))['avg'] or 0
+            next_session = next_sessions_map.get(cls.next_session_id)
+            
+            # Ortalama ilerleme - basitleştirilmiş
+            avg_progress = 0
+            if cls.course_id:
+                enrollment_progress = Enrollment.objects.filter(
+                    course_id=cls.course_id,
+                    status=Enrollment.Status.ACTIVE
+                ).aggregate(avg=Avg('progress_percent'))
+                avg_progress = enrollment_progress['avg'] or 0
 
             result.append({
                 'id': str(cls.id),
@@ -229,7 +274,7 @@ class InstructorClassViewSet(viewsets.ViewSet):
                     'id': str(cls.course.id),
                     'title': cls.course.title,
                 },
-                'studentCount': cls.student_count,
+                'studentCount': cls.active_student_count or cls.student_count,
                 'schedule': cls.term or 'Belirlenmedi',
                 'nextSession': {
                     'date': next_session.scheduled_at.strftime('%Y-%m-%d') if next_session else None,
@@ -344,21 +389,40 @@ class InstructorStudentViewSet(viewsets.ViewSet):
         status_filter = request.query_params.get('status', '')
         course_filter = request.query_params.get('course', '')
 
-        # Eğitmenin sınıflarındaki öğrenciler
-        my_classes = ClassGroup.objects.filter(
+        # Eğitmenin sınıflarının ID'leri (optimize edilmiş)
+        my_classes_ids = ClassGroup.objects.filter(
             instructors=user,
             status=ClassGroup.Status.ACTIVE
-        )
+        ).values_list('id', flat=True)
         
-        # Benzersiz öğrencileri al
+        # Benzersiz öğrenci ID'leri
         student_ids = ClassEnrollment.objects.filter(
-            class_group__in=my_classes,
+            class_group_id__in=my_classes_ids,
             status=ClassEnrollment.Status.ACTIVE
         ).values_list('user_id', flat=True).distinct()
 
+        # Annotate ile enrolled_courses ve avg_score hesapla
+        from django.db.models import Count, Avg, Q
+        
         students_qs = User.objects.filter(
             id__in=student_ids,
             role=User.Role.STUDENT
+        ).annotate(
+            enrolled_courses_count=Count(
+                'enrollments',
+                filter=Q(
+                    enrollments__course__instructors=user,
+                    enrollments__status=Enrollment.Status.ACTIVE
+                ),
+                distinct=True
+            ),
+            avg_score_computed=Avg(
+                'assignment_submissions__score',
+                filter=Q(
+                    assignment_submissions__assignment__class_group_id__in=my_classes_ids,
+                    assignment_submissions__status=AssignmentSubmission.Status.GRADED
+                )
+            )
         )
 
         # Arama filtresi
@@ -373,20 +437,10 @@ class InstructorStudentViewSet(viewsets.ViewSet):
         now = timezone.now()
         
         for student in students_qs[:50]:  # Limit
-            # Kayıtlı kurs sayısı
-            enrolled_courses = Enrollment.objects.filter(
-                user=student,
-                course__instructors=user,
-                status=Enrollment.Status.ACTIVE
-            ).count()
-
-            # Ortalama skor
-            avg_score = AssignmentSubmission.objects.filter(
-                student=student,
-                assignment__class_group__in=my_classes,
-                status=AssignmentSubmission.Status.GRADED
-            ).aggregate(avg=Avg('score'))['avg'] or 0
-
+            # Annotate'den aldığımız değerler
+            enrolled_courses = student.enrolled_courses_count or 0
+            avg_score = student.avg_score_computed or 0
+            
             # Son aktivite
             last_activity = student.last_login
             if last_activity:

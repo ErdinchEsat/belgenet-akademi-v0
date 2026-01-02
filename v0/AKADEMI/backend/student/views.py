@@ -52,7 +52,15 @@ class StudentClassViewSet(viewsets.ReadOnlyModelViewSet):
         return ClassGroup.objects.filter(
             class_enrollments__user=user,
             class_enrollments__status='ACTIVE',
-        ).prefetch_related('instructors', 'course', 'live_sessions', 'assignments')
+        ).select_related(
+            'course',
+            'course__tenant',
+        ).prefetch_related(
+            'instructors',
+            'live_sessions',
+            'assignments',
+            'class_enrollments',
+        )
     
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -76,11 +84,18 @@ class StudentAssignmentViewSet(viewsets.ReadOnlyModelViewSet):
         enrolled_classes = ClassGroup.objects.filter(
             class_enrollments__user=user,
             class_enrollments__status='ACTIVE',
-        )
+        ).values_list('id', flat=True)  # Sadece ID'leri al - daha verimli
+        
         return Assignment.objects.filter(
-            class_group__in=enrolled_classes,
+            class_group_id__in=enrolled_classes,
             status='PUBLISHED',
-        ).select_related('class_group')
+        ).select_related(
+            'class_group',
+            'class_group__course',
+            'created_by',  # Ödevi oluşturan eğitmen
+        ).prefetch_related(
+            'submissions',  # Öğrencinin teslim durumu
+        )
     
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -152,11 +167,15 @@ class StudentLiveSessionViewSet(viewsets.ReadOnlyModelViewSet):
         enrolled_classes = ClassGroup.objects.filter(
             class_enrollments__user=user,
             class_enrollments__status='ACTIVE',
-        )
+        ).values_list('id', flat=True)  # Sadece ID'leri al - daha verimli
         
         queryset = LiveSession.objects.filter(
-            class_group__in=enrolled_classes,
-        ).select_related('class_group', 'instructor')
+            class_group_id__in=enrolled_classes,
+        ).select_related(
+            'class_group',
+            'class_group__course',
+            'instructor',
+        )
         
         # Status filtresi
         status_filter = self.request.query_params.get('status')

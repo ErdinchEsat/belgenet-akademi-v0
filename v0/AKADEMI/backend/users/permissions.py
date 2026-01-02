@@ -122,6 +122,10 @@ class IsOwnerOrAdmin(BasePermission):
             if hasattr(obj, 'tenant'):
                 return obj.tenant == request.user.tenant
         
+        # Course için instructors kontrolü (ManyToMany)
+        if hasattr(obj, 'instructors'):
+            return obj.instructors.filter(id=request.user.id).exists()
+        
         # Kaynak sahibi
         if hasattr(obj, 'user'):
             return obj.user == request.user

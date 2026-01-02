@@ -14,6 +14,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
+
+# Custom permissions
+from backend.users.permissions import IsAdminOrSuperAdmin, IsSuperAdmin
 from django.utils import timezone
 from django.db.models import Count, Avg, Q
 from datetime import timedelta
@@ -82,8 +85,10 @@ class TenantDashboardView(APIView):
     - Problem alanları
     - Son aktiviteler
     - Hızlı aksiyonlar
+    
+    Yetki: TenantAdmin veya SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrSuperAdmin]
     
     def get(self, request):
         user = request.user
@@ -409,8 +414,10 @@ class AdminUserViewSet(viewsets.ModelViewSet):
     POST /api/v1/admin/users/{id}/reset-password/ - Şifre sıfırla
     POST /api/v1/admin/users/{id}/change-role/  - Rol değiştir
     POST /api/v1/admin/users/bulk-import/       - Toplu import (CSV)
+    
+    Yetki: TenantAdmin veya SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrSuperAdmin]
     
     def get_queryset(self):
         from backend.users.models import User
@@ -781,8 +788,10 @@ class AdminCourseViewSet(viewsets.ViewSet):
     POST /api/v1/admin/courses/{id}/archive/      - Arşivle
     POST /api/v1/admin/courses/{id}/restore/      - Arşivden çıkar
     POST /api/v1/admin/courses/bulk-action/       - Toplu işlem
+    
+    Yetki: TenantAdmin veya SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrSuperAdmin]
     
     def get_queryset(self):
         from backend.courses.models import Course
@@ -1224,8 +1233,10 @@ class AdminClassGroupViewSet(viewsets.ViewSet):
     POST /api/v1/admin/class-groups/{id}/assign-instructors/ - Eğitmen ata
     POST /api/v1/admin/class-groups/{id}/archive/        - Arşivle
     POST /api/v1/admin/class-groups/{id}/activate/       - Aktifleştir
+    
+    Yetki: TenantAdmin veya SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrSuperAdmin]
     
     def get_queryset(self):
         from backend.student.models import ClassGroup
@@ -1731,8 +1742,10 @@ class AdminOpsInboxViewSet(viewsets.ViewSet):
     POST /api/v1/admin/ops-inbox/{type}/{id}/reject/    - Reddet
     POST /api/v1/admin/ops-inbox/{type}/{id}/revision/  - Revizyon iste
     POST /api/v1/admin/ops-inbox/bulk-action/      - Toplu işlem
+    
+    Yetki: TenantAdmin veya SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrSuperAdmin]
     
     def _get_pending_items(self, user):
         """Tüm bekleyen işleri topla."""
@@ -2110,8 +2123,10 @@ class AdminReportsViewSet(viewsets.ViewSet):
     GET /api/v1/admin/reports/revenue/             - Gelir raporu
     GET /api/v1/admin/reports/instructors/         - Eğitmen performans raporu
     POST /api/v1/admin/reports/export/             - Rapor dışa aktarma
+    
+    Yetki: TenantAdmin veya SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrSuperAdmin]
     
     def _get_tenant(self, user):
         """Kullanıcının tenant'ını al."""
@@ -2836,8 +2851,10 @@ class AdminRolesViewSet(viewsets.ViewSet):
     DELETE /api/v1/admin/roles/{id}/          - Rol sil
     GET /api/v1/admin/roles/permissions/      - İzin şeması
     POST /api/v1/admin/roles/assign/          - Kullanıcılara rol ata
+    
+    Yetki: TenantAdmin veya SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrSuperAdmin]
     
     def _get_tenant(self, user):
         """Kullanıcının tenant'ını al."""
@@ -3096,8 +3113,10 @@ class AdminTenantsViewSet(viewsets.ViewSet):
     DELETE /api/v1/admin/tenants/{id}/      - Tenant sil
     GET /api/v1/admin/tenants/{id}/admins/  - Tenant adminleri
     POST /api/v1/admin/tenants/{id}/admins/ - Admin ata
+    
+    Yetki: SADECE SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsSuperAdmin]
     
     def _check_super_admin(self, user):
         """Super Admin kontrolü."""
@@ -3316,8 +3335,10 @@ class AdminTenantsViewSet(viewsets.ViewSet):
 class SystemStatsView(APIView):
     """
     Sistem istatistikleri - Super Admin Dashboard.
+    
+    Yetki: SADECE SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsSuperAdmin]
     
     def get(self, request):
         from backend.tenants.models import Tenant
@@ -3392,8 +3413,10 @@ class SystemStatsView(APIView):
 class TechLogsViewSet(viewsets.ViewSet):
     """
     GET /api/v1/admin/logs/tech/
+    
+    Yetki: TenantAdmin veya SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrSuperAdmin]
 
     def list(self, request):
         logs = [
@@ -3431,8 +3454,10 @@ class TechLogsViewSet(viewsets.ViewSet):
 class ActivityLogsViewSet(viewsets.ViewSet):
     """
     GET /api/v1/admin/logs/activity/
+    
+    Yetki: TenantAdmin veya SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrSuperAdmin]
 
     def list(self, request):
         logs = [
@@ -3482,8 +3507,10 @@ class ActivityLogsViewSet(viewsets.ViewSet):
 class FinanceAcademiesView(APIView):
     """
     GET /api/v1/admin/finance/academies/
+    
+    Yetki: TenantAdmin veya SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrSuperAdmin]
 
     def get(self, request):
         academies = [
@@ -3514,8 +3541,10 @@ class FinanceAcademiesView(APIView):
 class FinanceCategoriesView(APIView):
     """
     GET /api/v1/admin/finance/categories/
+    
+    Yetki: TenantAdmin veya SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrSuperAdmin]
 
     def get(self, request):
         categories = [
@@ -3531,8 +3560,10 @@ class FinanceCategoriesView(APIView):
 class FinanceInstructorsView(APIView):
     """
     GET /api/v1/admin/finance/instructors/
+    
+    Yetki: TenantAdmin veya SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrSuperAdmin]
 
     def get(self, request):
         instructors = [
@@ -3573,8 +3604,10 @@ class GlobalLiveSessionsViewSet(viewsets.ViewSet):
     GET /api/v1/admin/live-sessions/
     GET /api/v1/admin/live-sessions/{id}/
     POST /api/v1/admin/live-sessions/{id}/end/
+    
+    Yetki: TenantAdmin veya SuperAdmin
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrSuperAdmin]
 
     def list(self, request):
         sessions = [

@@ -1,6 +1,6 @@
 # 📋 BelgeNet Merkezi İş Programı
 
-> **Son Güncelleme:** 27 Aralık 2024  
+> **Son Güncelleme:** 2 Ocak 2026  
 > **Proje:** EDUTECH (Platform) + AKADEMİ (Portal)  
 > **Mimari:** MAYSCON (Merkezi Ayar Yönetim Sistemi)
 > **Versiyon:** v1.0.0
@@ -58,7 +58,7 @@
 | **Backend** | Canlı Ders | 🟢 Tamamlandı | `████████████████████` 100% | Jitsi, BBB, Attendance |
 | **Backend** | Ödeme Sistemi | 🔴 Bekliyor | `░░░░░░░░░░░░░░░░░░░░` 0% | iyzico/Stripe |
 | **Frontend** | React SPA | 🟢 Tamamlandı | `████████████████████` 100% | 60+ Component, TypeScript |
-| **DevOps** | Test & Kalite | 🔴 Bekliyor | `░░░░░░░░░░░░░░░░░░░░` 0% | Unit, E2E, Performance |
+| **DevOps** | Test & Kalite | 🟡 Devam Ediyor | `█████████████████░░░` 85% | 68 test dosyası, E2E ✅, Visual ✅ |
 | **DevOps** | Deployment | 🔴 Bekliyor | `░░░░░░░░░░░░░░░░░░░░` 0% | Docker, CI/CD, K8s |
 
 ### Özet İstatistikler
@@ -69,10 +69,13 @@
 ╠═══════════════════════════════════════════════════════════════╣
 ║  📦 Toplam Modül          : 16                                 ║
 ║  ✅ Tamamlanan Modül      : 13                                 ║
-║  🔴 Bekleyen Modül        : 3                                  ║
+║  🟡 Devam Eden Modül      : 1 (Test & Kalite %85)              ║
+║  🔴 Bekleyen Modül        : 2                                  ║
 ║  ─────────────────────────────────────────────────────────────║
-║  📊 Genel İlerleme        : %81 [████████████████░░░░]         ║
-║  📅 Tahmini Tamamlanma    : Q1 2025                            ║
+║  📊 Genel İlerleme        : %90 [██████████████████░░]         ║
+║  🧪 Test Dosyası Sayısı   : 68 (18 Python + 46 TS + 4 E2E)     ║
+║  📅 Tahmini Tamamlanma    : Q1 2026                            ║
+║  📅 Son Güncelleme        : 2 Ocak 2026                        ║
 ╚═══════════════════════════════════════════════════════════════╝
 ```
 
@@ -411,39 +414,181 @@
 
 ### M16. Test & Kalite Güvencesi
 
-> **Durum:** 🔴 BEKLIYOR  
+> **Durum:** 🟡 DEVAM EDİYOR  
 > **Öncelik:** Yüksek  
-> **Tahmini Süre:** 2 Hafta
+> **Güncelleme:** 1 Ocak 2026  
+> **Test Konumu:** `mayscon.v1/tests/akademi/`
 
 #### 16.1 Backend Unit Testler
 
-- [ ] User model testleri
-- [ ] Authentication testleri
-- [ ] Course API testleri
-- [ ] Enrollment testleri
-- [ ] Student API testleri
-- [ ] Instructor API testleri
-- [ ] Admin API testleri
-- [ ] Audit log testleri
+> **Durum:** ✅ TAMAMLANDI  
+> **Konum:** `tests/akademi/unit/`
 
-#### 16.2 Frontend Unit Testler
+| Test Dosyası | Boyut | Açıklama | Durum |
+|--------------|-------|----------|-------|
+| `test_user_model.py` | 21KB | User model CRUD, validasyon, rol yönetimi | ✅ |
+| `test_course_model.py` | 15KB | Course model, modüller, içerik yönetimi | ✅ |
+| `test_enrollment_model.py` | 14KB | Kayıt işlemleri, ilerleme takibi | ✅ |
+| `test_quiz_model.py` | 25KB | Quiz, soru, cevap modelleri | ✅ |
+| `test_tenant_model.py` | 13KB | Multi-tenant izolasyon testleri | ✅ |
+| `test_progress_model.py` | 19KB | İlerleme kayıt ve hesaplama testleri | ✅ |
 
-- [ ] Jest & React Testing Library kurulumu
-- [ ] Component testleri
-- [ ] Hook testleri
-- [ ] API service testleri
-- [ ] Form validation testleri
+**Tamamlanan:**
+- [x] User model testleri (`test_user_model.py` - 21KB)
+- [x] Course model testleri (`test_course_model.py` - 15KB)
+- [x] Enrollment testleri (`test_enrollment_model.py` - 14KB)
+- [x] Quiz model testleri (`test_quiz_model.py` - 25KB)
+- [x] Tenant model testleri (`test_tenant_model.py` - 13KB)
+- [x] Progress model testleri (`test_progress_model.py` - 19KB)
 
-#### 16.3 E2E Testler
+---
 
-- [ ] Playwright/Cypress kurulumu
-- [ ] Login flow testi
-- [ ] Student journey testi
-- [ ] Instructor journey testi
-- [ ] Admin journey testi
-- [ ] Kurs kayıt flow testi
+#### 16.2 Backend API Testler
 
-#### 16.4 Performance Optimizasyonu
+> **Durum:** ✅ TAMAMLANDI  
+> **Konum:** `tests/akademi/api/`
+
+| Test Dosyası | Boyut | Açıklama | Durum |
+|--------------|-------|----------|-------|
+| `test_auth_api.py` | 22KB | JWT token, login, logout, register | ✅ |
+| `test_course_api.py` | 26KB | Kurs CRUD, modül, içerik API'leri | ✅ |
+| `test_enrollment_api.py` | 18KB | Kayıt, ilerleme API'leri | ✅ |
+| `test_student_api.py` | 17KB | Öğrenci dashboard, courses, calendar | ✅ |
+| `test_instructor_api.py` | 16KB | Eğitmen classes, students, assessments | ✅ |
+| `test_admin_api.py` | 15KB | Admin CRUD, raporlar, ops inbox | ✅ |
+
+**Tamamlanan:**
+- [x] Authentication API testleri (`test_auth_api.py` - 22KB)
+- [x] Course API testleri (`test_course_api.py` - 26KB)
+- [x] Enrollment API testleri (`test_enrollment_api.py` - 18KB)
+- [x] Student API testleri (`test_student_api.py` - 17KB)
+- [x] Instructor API testleri (`test_instructor_api.py` - 16KB)
+- [x] Admin API testleri (`test_admin_api.py` - 15KB)
+
+---
+
+#### 16.3 Integration Testler
+
+> **Durum:** ✅ TAMAMLANDI  
+> **Konum:** `tests/akademi/integration/`
+
+| Test Dosyası | Boyut | Açıklama | Durum |
+|--------------|-------|----------|-------|
+| `test_audit_log.py` | 17KB | Audit log middleware, kayıt testleri | ✅ |
+| `test_multi_tenant.py` | 18KB | Tenant izolasyon, cross-tenant erişim | ✅ |
+| `test_workflow.py` | 24KB | Kurs onay workflow, enrollment flow | ✅ |
+
+**Tamamlanan:**
+- [x] Audit log testleri (`test_audit_log.py` - 17KB)
+- [x] Multi-tenant testleri (`test_multi_tenant.py` - 18KB)
+- [x] Workflow testleri (`test_workflow.py` - 24KB)
+
+---
+
+#### 16.4 Frontend Unit Testler
+
+> **Durum:** ✅ TAMAMLANDI  
+> **Konum:** `tests/akademi/frontend/` ve `frontend/test/`
+
+**Test Altyapısı:**
+| Dosya | Boyut | Açıklama |
+|-------|-------|----------|
+| `setup.ts` | 4KB | Test ortamı kurulumu |
+| `test-utils.tsx` | 5KB | Test helper fonksiyonlar |
+| `types.ts` | 2KB | Test type tanımları |
+| `index.ts` | 1KB | Test exports |
+
+**Test Kategorileri (specs/):**
+
+| Kategori | Dosya Sayısı | Açıklama |
+|----------|--------------|----------|
+| `api/` | 4 | API service testleri |
+| `components/` | 8 | UI component testleri |
+| `contexts/` | 2 | Context testleri (Auth, Tenant) |
+| `forms/` | 1 | Form validation testleri |
+| `hooks/` | 4 | Custom hook testleri |
+| `pages/` | 13 | Page component testleri |
+| **Toplam** | **32** | |
+
+**Mock Sistemi (mocks/):** 11 mock dosyası
+
+**Factory Sistemi (factories/):** 9 factory dosyası
+
+**Tamamlanan:**
+- [x] Jest & React Testing Library kurulumu
+- [x] Component testleri (8 dosya)
+- [x] Hook testleri (4 dosya)
+- [x] API service testleri (4 dosya)
+- [x] Form validation testleri (1 dosya)
+- [x] Context testleri (2 dosya)
+- [x] Page testleri (13 dosya)
+
+**Ek Testler:**
+| Dosya | Konum | Boyut | Açıklama |
+|-------|-------|-------|----------|
+| `useApi.test.tsx` | `frontend/test/` | 12KB | API hook testleri |
+| `test_auth.py` | `tests/akademi/` | 5KB | Auth entegrasyon testleri |
+| `test_quiz_matching.py` | `tests/akademi/` | 5KB | Eşleştirme soruları testleri |
+
+---
+
+#### 16.5 E2E Testler
+
+> **Durum:** ✅ TAMAMLANDI  
+> **Konum:** `frontend/e2e/`
+
+| Test Dosyası | Boyut | Açıklama | Durum |
+|--------------|-------|----------|-------|
+| `auth.e2e.ts` | 7KB | Login, logout, register flow | ✅ |
+| `course-player.e2e.ts` | 8KB | Video izleme, ilerleme, quiz | ✅ |
+| `dashboard.e2e.ts` | 9KB | Dashboard navigasyon, widget'lar | ✅ |
+| `visual-regression.visual.ts` | 2KB | Görsel regresyon testleri | ✅ |
+
+**Snapshots (Baseline Images):**
+- `landing-page-chromium-darwin.png` (407KB)
+- `landing-page-mobile-chromium-darwin.png` (61KB)
+- `landing-page-tablet-chromium-darwin.png` (63KB)
+- `login-form-open-chromium-darwin.png` (396KB)
+- `login-form-error-chromium-darwin.png` (385KB)
+
+**API Mocking:**
+- ✅ `mockAuth` - Login/token endpoints
+- ✅ `mockDashboard` - Courses, enrollments, stats
+- ✅ `mockCoursePlayer` - Course detail with modules
+
+**Tamamlanan:**
+- [x] Playwright kurulumu (`playwright.config.ts`)
+- [x] Login flow testi (`auth.e2e.ts`)
+- [x] Course Player testi (`course-player.e2e.ts`)
+- [x] Dashboard testi (`dashboard.e2e.ts`)
+- [x] Görsel Regresyon testleri (`visual-regression.visual.ts`)
+- [x] API Mocking altyapısı (`test-fixtures.ts`)
+
+---
+
+#### 16.6 Ek Frontend Testler
+
+> **Durum:** ✅ TAMAMLANDI  
+> **Konum:** `mayscon.v1/tests/akademi/frontend/specs/`
+
+| Kategori | Dosya Sayısı | Test Dosyaları |
+|----------|--------------|----------------|
+| `accessibility/` | 1 | accessibility.test.tsx |
+| `api/` | 8 | admin, auth, courses, instructor, player, student, tenants, users |
+| `chaos/` | 2 | network_chaos, websocket_stress |
+| `components/` | 11 | Avatar, Button, GenericTable, GlobalCalendarModal, Header, LiveSessionCard, PlayerOverlay, Sidebar, UniversalCourseCard, VideoPlayer, YouTubePlayer |
+| `contexts/` | 2 | AuthContext, TenantContext |
+| `forms/` | 1 | LoginForm |
+| `hooks/` | 5 | useApi, useApiExtended, useMessaging, useNotifications, useWebSocket |
+| `pages/` | 13 | CoursePlayer, CreateCoursePage, DashboardHome, FinancePage, LiveClassManager, MyClassesPage, MyStudentsPage, ProfilePage, StudentAssignmentsPage, StudentClassesPage, TenantCourseCatalogPage, TenantUsersPage, TenantsPage |
+| `performance/` | 1 | performance.test.tsx |
+| `resilience/` | 1 | error_boundary.test.tsx |
+| `security/` | 1 | input_fuzzing.test.tsx |
+| **Toplam** | **46** | |
+
+---
+
+#### 16.7 Performance Optimizasyonu
 
 - [ ] Database query optimizasyonu
 - [ ] N+1 query analizi
@@ -453,7 +598,9 @@
 - [ ] Image lazy loading
 - [ ] Bundle size analizi
 
-#### 16.5 Error Handling
+---
+
+#### 16.8 Error Handling
 
 - [ ] Global error boundary (React)
 - [ ] API error standardizasyonu
@@ -461,13 +608,72 @@
 - [ ] Error logging
 - [ ] User-friendly error mesajları
 
-#### 16.6 Code Quality
+---
+
+#### 16.9 Code Quality
 
 - [ ] ESLint kuralları güncelleme
 - [ ] Prettier ayarları
 - [ ] Pre-commit hooks
 - [ ] Code review checklist
 - [ ] Documentation (JSDoc/Sphinx)
+
+---
+
+#### 📊 M16 İlerleme Özeti
+
+| Alt Modül | Durum | İlerleme |
+|-----------|-------|----------|
+| Backend Unit Testler | ✅ | 100% (6 dosya) |
+| Backend API Testler | ✅ | 100% (6 dosya) |
+| Integration Testler | ✅ | 100% (3 dosya) |
+| Permission Testler | ✅ | 100% (1 dosya) |
+| Frontend Unit Testler | ✅ | 100% (46 dosya) |
+| Accessibility Testler | ✅ | 100% (1 dosya) |
+| Performance Testler | ✅ | 100% (1 dosya) |
+| Chaos/Resilience Testler | ✅ | 100% (3 dosya) |
+| Security Testler | ✅ | 100% (1 dosya) |
+| E2E Testler | ✅ | 100% (4 dosya + mocking) |
+| Visual Regression | ✅ | 100% (5 snapshot) |
+| Performance Optimization | 🔴 | 0% |
+| Error Handling | 🔴 | 0% |
+| Code Quality | 🔴 | 0% |
+| **Toplam M16** | 🟡 | **~85%** |
+
+---
+
+#### 📈 Test İstatistikleri
+
+```
+╔═══════════════════════════════════════════════════════════════╗
+║                    TEST ENVANTER RAPORU                        ║
+╠═══════════════════════════════════════════════════════════════╣
+║  🐍 Backend Python Testleri       : 18 dosya                   ║
+║     ├── Unit testler              : 6 dosya                    ║
+║     ├── API testler               : 6 dosya                    ║
+║     ├── Integration testler       : 3 dosya                    ║
+║     ├── Permission testler        : 1 dosya                    ║
+║     └── Root testler              : 2 dosya                    ║
+║  ─────────────────────────────────────────────────────────────║
+║  ⚛️  Frontend TypeScript Testleri : 46 dosya                   ║
+║     ├── Component testler         : 11 dosya                   ║
+║     ├── API service testler       : 8 dosya                    ║
+║     ├── Page testler              : 13 dosya                   ║
+║     ├── Hook testler              : 5 dosya                    ║
+║     ├── Context testler           : 2 dosya                    ║
+║     ├── Form testler              : 1 dosya                    ║
+║     └── Diğer (a11y, perf, chaos) : 6 dosya                    ║
+║  ─────────────────────────────────────────────────────────────║
+║  🎭 E2E Playwright Testleri       : 4 dosya                    ║
+║     ├── auth.e2e.ts               : Login/Logout flow          ║
+║     ├── dashboard.e2e.ts          : Dashboard navigation       ║
+║     ├── course-player.e2e.ts      : Video player tests         ║
+║     └── visual-regression.visual.ts: 5 baseline snapshot       ║
+║  ─────────────────────────────────────────────────────────────║
+║  📊 TOPLAM TEST DOSYASI           : 68 dosya                   ║
+║  📅 Son Güncelleme                : 2 Ocak 2026                ║
+╚═══════════════════════════════════════════════════════════════╝
+```
 
 ---
 

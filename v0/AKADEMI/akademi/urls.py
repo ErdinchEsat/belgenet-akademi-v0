@@ -179,6 +179,30 @@ except ImportError:
     ]
 
 # =============================================================================
+# DEBUG/PROFILING URL PATTERNS (Development Only)
+# =============================================================================
+from django.conf import settings
+
+if settings.DEBUG:
+    # Silk - Query Profiling Dashboard
+    try:
+        urlpatterns += [
+            path('silk/', include('silk.urls', namespace='silk')),
+        ]
+    except Exception:
+        pass  # silk yüklü değil
+    
+    # Debug Toolbar (mayscon base'den gelmiyorsa)
+    try:
+        import debug_toolbar
+        if not any('__debug__' in str(p.pattern) for p in urlpatterns):
+            urlpatterns = [
+                path('__debug__/', include(debug_toolbar.urls)),
+            ] + urlpatterns
+    except ImportError:
+        pass  # debug_toolbar yüklü değil
+
+# =============================================================================
 # AKADEMI NAMESPACE'LERİ
 # =============================================================================
 """

@@ -35,8 +35,12 @@ class InstructorSerializer(serializers.ModelSerializer):
         return f"{obj.first_name} {obj.last_name}".strip() or obj.email
 
     def get_avatar(self, obj):
-        if hasattr(obj, 'profile') and obj.profile and obj.profile.avatar_url:
-            return obj.profile.avatar_url
+        if hasattr(obj, 'profile') and obj.profile:
+            # Check for different possible avatar field names
+            if hasattr(obj.profile, 'avatar_url') and obj.profile.avatar_url:
+                return obj.profile.avatar_url
+            if hasattr(obj.profile, 'avatar') and obj.profile.avatar:
+                return obj.profile.avatar.url if hasattr(obj.profile.avatar, 'url') else str(obj.profile.avatar)
         return f"https://ui-avatars.com/api/?name={obj.first_name}+{obj.last_name}&background=random"
 
 
@@ -107,7 +111,7 @@ class ClassGroupListSerializer(serializers.ModelSerializer):
 
 class ClassGroupDetailSerializer(serializers.ModelSerializer):
     """Sınıf detay serializer."""
-    course = CourseMinimalSerializer(source='course', read_only=True)
+    course = CourseMinimalSerializer(read_only=True)
     instructors = InstructorSerializer(many=True, read_only=True)
     students = serializers.SerializerMethodField()
     workload = serializers.SerializerMethodField()

@@ -263,18 +263,29 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated:
             return Enrollment.objects.none()
         
+        # Optimize: İlişkili verileri önceden yükle
+        base_queryset = Enrollment.objects.select_related(
+            'user',
+            'course',
+            'course__tenant',
+        ).prefetch_related(
+            'course__instructors',
+            'course__modules',
+            'content_progress',
+        )
+        
         # Super/Tenant Admin tüm kayıtları görebilir
         if user.role in [User.Role.SUPER_ADMIN, User.Role.TENANT_ADMIN]:
             if user.role == User.Role.TENANT_ADMIN:
-                return Enrollment.objects.filter(course__tenant=user.tenant)
-            return Enrollment.objects.all()
+                return base_queryset.filter(course__tenant=user.tenant)
+            return base_queryset.all()
         
         # Eğitmen kendi kurslarındaki kayıtları görebilir
         if user.role == User.Role.INSTRUCTOR:
-            return Enrollment.objects.filter(course__instructors=user)
+            return base_queryset.filter(course__instructors=user)
         
         # Öğrenci sadece kendi kayıtlarını görebilir
-        return Enrollment.objects.filter(user=user)
+        return base_queryset.filter(user=user)
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -326,4 +337,23 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         progress = enrollment.content_progress.all()
         
         return Response(ContentProgressSerializer(progress, many=True).data)
+
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None):
+        """
+        Kaydı iptal et.
+        POST /api/v1/enrollments/{id}/cancel/
+        """
+        enrollment = self.get_object()
+        
+        if enrollment.status == Enrollment.Status.CANCELLED:
+            return Response(
+                {'error': 'Kayıt zaten iptal edilmiş.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        enrollment.status = Enrollment.Status.CANCELLED
+        enrollment.save(update_fields=['status'])
+        
+        return Response(EnrollmentSerializer(enrollment).data)
 

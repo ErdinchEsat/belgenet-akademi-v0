@@ -87,6 +87,10 @@ class ClassGroup(models.Model):
         verbose_name = _('Sınıf')
         verbose_name_plural = _('Sınıflar')
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['tenant', 'status'], name='classgroup_tenant_status_idx'),
+            models.Index(fields=['course', 'status'], name='classgroup_course_status_idx'),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.code})"
@@ -177,6 +181,10 @@ class Assignment(models.Model):
         verbose_name = _('Ödev')
         verbose_name_plural = _('Ödevler')
         ordering = ['-due_date']
+        indexes = [
+            models.Index(fields=['class_group', 'status'], name='assignment_class_status_idx'),
+            models.Index(fields=['due_date'], name='assignment_due_idx'),
+        ]
 
     def __str__(self):
         return self.title
@@ -282,6 +290,10 @@ class LiveSession(models.Model):
         verbose_name = _('Canlı Ders')
         verbose_name_plural = _('Canlı Dersler')
         ordering = ['-scheduled_at']
+        indexes = [
+            models.Index(fields=['instructor', 'status'], name='livesession_instr_status_idx'),
+            models.Index(fields=['scheduled_at'], name='livesession_scheduled_idx'),
+        ]
 
     def __str__(self):
         return f"{self.title} - {self.scheduled_at}"

@@ -454,6 +454,11 @@ class Enrollment(models.Model):
         verbose_name_plural = _('Kayıtlar')
         unique_together = ['user', 'course']
         ordering = ['-enrolled_at']
+        indexes = [
+            models.Index(fields=['user', 'status'], name='enrollment_user_status_idx'),
+            models.Index(fields=['course', 'status'], name='enrollment_course_status_idx'),
+            models.Index(fields=['enrolled_at'], name='enrollment_date_idx'),
+        ]
 
     def __str__(self):
         return f'{self.user.email} - {self.course.title}'
